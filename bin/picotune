@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'picotune'
+p = PicoTune.new(ARGV[0]).wav
+puts "#{ARGV[0]} -> #{p}"

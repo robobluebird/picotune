@@ -3,10 +3,9 @@ Use a text file with a simple DSL to generate a musical (maybe) wav file.
 
 ## how to use
 - install with `gem install picotune` or add `gem picotune` to your `Gemfile`
-- `require 'picotune'` in your code or irb
-- `p = PicoTune.new('path/to/your/input/file.txt')`
-- `p.wav`
-- see the newly minted `.wav` file in whatever directory you ran the above from!
+- Use in code: `require 'picotune'; p = PicoTune.new('path/to/your/input/file.txt'); p.wav`
+- *or* use the command line! `bash> picotune path/to/file.txt`
+- then check out the newly minted `.wav` file in whatever directory you ran the above from!
 
 ## the dsl
 - Take a look at the example file below, then come back here and read this explainer:
