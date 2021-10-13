@@ -221,9 +221,13 @@ class PicoTune::Phrase
 
       @melodies.each do |melody|
         temp = Array.new(buffer_size) { PicoTune::Sample.new } if melody.instrument.reverb?
-        sub_buffer_size = buffer_size / (@beats * @subbeats)
+        sub_buffer_size = (buffer_size.to_f / (@beats * @subbeats)).ceil
         last_step_number = -1
         carry_over = 0
+
+        if melody.pattern.steps.count != @beats * @subbeats
+          raise "Mismatch between Pattern \"#{melody.pattern.name}\", which has #{melody.pattern.steps.count} steps, and Phrase \"#{@name}\", which has #{@beats} beats and #{subbeats} subbeats (meaning any pattern it uses should have #{@beats * @subbeats} steps). Please check your pattern and phrase definitions to find the discrepancy!"
+        end
 
         melody.pattern.steps.each_with_index do |note, step_number|
           unless note == '.'
@@ -445,7 +449,12 @@ class PicoTune::Assembler
     phrases = list.select { |item| item['type'] == 'phrase' }.map do |item|
       melodies = item['melodies'].map do |m|
         instrument = instruments.find { |i| i.name == m[0] }
+
+        raise "Instrument named \"#{m[0]}\" doesn't exist!" unless instrument
+
         pattern = patterns.find { |p| p.name == m[1] }
+
+        raise "Pattern named \"#{m[1]}\" doesn't exist!" unless pattern
 
         PicoTune::Melody.new instrument, pattern
       end
@@ -460,13 +469,16 @@ class PicoTune::Assembler
     end
 
     sequence = list.find { |item| item['type'] == 'sequence' }
+
+    raise "Please define a sequence in your txt file with \"sequence s1 s2 s3...\" where s1/s2/s3/etc are names of phrases" unless sequence
+
     sequence['list'].each do |phrase_name|
       raise "undefined phrase \"#{phrase_name}\" in sequence" unless phrases.find { |p| p.name == phrase_name }
     end
 
-
     tune = list.find { |item| item['type'] == 'tune' }
-    raise 'undefined tune name' unless tune['name']
+
+    raise "Please define your tune's name in your txt file  with \"tune <tune name>\"" unless tune && tune['name']
 
     PicoTune::Tune.new tune['name'], sequence['list'], phrases
   end
@@ -497,9 +509,9 @@ class PicoTune::Parser
           item['list'] = parts[1..-1]
         elsif parts[0] == 'pattern'
           item['name'] = parts[1]
-          item['list'] = pattern_steps(parts[2])
+          item['list'] = pattern_steps parts[2..-1].join
         else
-          item['name'] = parts[1]
+          item['name'] = parts[1..-1].join
         end
 
         bag << item
@@ -512,7 +524,7 @@ class PicoTune::Parser
         elsif collecting_melodies
           bag.last['melodies'].push parts
         else
-          bag.last[parts[0]] = parts[1]
+          bag.last[parts[0]] = parts[1..-1].join
         end
       end
       
