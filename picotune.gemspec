@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'picotune'
-  s.version     = '0.0.6'
+  s.version     = '0.0.7'
   s.summary     = "Text file -> wav file. Make tiny tunes!"
   s.description = "Use a text file with a simple DSL to generate a musical (maybe) wav file. See https://github.com/robobluebird/picotune for DSL documentation!"
   s.authors     = ["Zachary Schroeder"]

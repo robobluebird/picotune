@@ -363,7 +363,7 @@ class PicoTune::Instrument
   end
 
   def delay
-    @reverb == 'none' ? 0.0 : 0.1
+    @reverb == 'none' ? 0.0 : 0.08
   end
 
   def decay
@@ -371,11 +371,11 @@ class PicoTune::Instrument
     when 'none'
       0.0
     when 'some'
-      0.25
+      0.1
     when 'more'
-      0.5
+      0.3
     when 'lots'
-      0.75
+      0.5
     else
       0.0
     end
