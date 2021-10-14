@@ -34,44 +34,108 @@ You can have as many tempo and time signature shifts as you want in a tune, so g
 That's about it! Good luck!
 
 ```
-tune helloworld
+tune songofstorms
 
-sequence ph1 ph2 ph1 ph2
+sequence ph1 ph2 ph1 ph2 ph3 ph4 ph5 ph6 ph3 ph4 ph5 ph7 ph8 ph1 ph2
 
 instrument i1
-tone sine
-length full
+tone triangle
 volume full
-pan center
+length full
+pan centerleft
 reverb none
 
 instrument i2
-tone square
-length half
-volume half
+tone triangle
+volume full
+length full
 pan centerright
+reverb none
+
+instrument i3
+tone sine
+volume half
+length full
+pan center
 reverb some
 
 phrase ph1
-tempo 120
-beats 4
-subbeats 4
+tempo 200
+beats 6
+subbeats 2
 melodies
 i1 p1
 i1 p2
-i1 p3
 
 phrase ph2
-tempo 160
-beats 3
-subbeats 4
+tempo 200
+beats 6
+subbeats 2
 melodies
-i1 p4
-i2 p5
+i2 p3
+i2 p4
 
-pattern p1 C4.C4.E4-E4-G4.G4.C4-C4.
-pattern p2 E4.E4.G4-G4-B4.B4.G4-G4.
-pattern p3 A4...C5.B4.A4---C5.C5.
-pattern p4 C4.C4.E4-E4-G4.G4.
-pattern p5 A4...C5.B4.A4---
+phrase ph3
+tempo 200
+beats 6
+subbeats 2
+melodies
+i1 p1
+i1 p2
+i3 p5
+
+phrase ph4
+tempo 200
+beats 6
+subbeats 2
+melodies
+i2 p3
+i2 p4
+i3 p6
+
+phrase ph5
+tempo 200
+beats 6
+subbeats 2
+melodies
+i1 p1
+i1 p2
+i3 p7
+
+phrase ph6
+tempo 200
+beats 6
+subbeats 2
+melodies
+i2 p3
+i2 p4
+i3 p8
+
+phrase ph7
+tempo 200
+beats 6
+subbeats 2
+melodies
+i1 p1
+i1 p2
+i3 p9
+
+phrase ph8
+tempo 200
+beats 6
+subbeats 2
+melodies
+i2 p3
+i2 p4
+i3 p9
+
+pattern p1 D3 . F3 . F3 . D3 . G3 - - -
+pattern p2 .  . A3 . A3 . .  . B3 - - -
+pattern p3 D3 . A3 . A3 . D3 . G3 - - -
+pattern p4 .  . C4 . C4 . .  . B3 - - -
+pattern p5 D4 A4 D5 . . . D4 A4 D5 . . .
+pattern p6 E5 - - F5 E5 F5 E5 C5 A4 - - -
+pattern p7 A4 . D4 . F4 G4 A4 - - - - -
+pattern p8 A4 . D4 . F4 G4 E4 - - - - -
+pattern p9 D4 - - - - - - - - - - -
 ```
