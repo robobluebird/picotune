@@ -49,17 +49,18 @@ class PicoTune::Sample
     @left += sample.left
     @right += sample.right
 
-    # "foldback" instead of hard clipping, sounds cool
+    # hard clip
+
     if @left > 1.0
-      @left = 1.0 - (@left - 1.0) # ex: 1.0 - (1.2 - 1.0) => 1.0 - 0.2 => 0.8
+      @left = 1.0
     elsif @left < -1.0
-      @left = -1.0 - (@left + 1.0) # ex: -1.0 - (-1.2 + 1.0) => -1.0 - -0.2 => -0.8
+      @left = -1.0
     end
 
     if @right > 1.0
-      @right = 1.0 - (@right - 1.0)
+      @right = 1.0
     elsif @right < -1.0
-      @right = -1.0 - (@right + 1.0)
+      @right = -1.0
     end
 
     self # return self to chain ops EX: sample.add(sample).add(sample) etc
@@ -75,10 +76,9 @@ class PicoTune::Sample
 end
 
 class PicoTune::WaveSample
-  def initialize tone, samples_per_wave, multiplier = nil
+  def initialize tone, samples_per_wave
     @tone = tone
     @samples_per_wave = samples_per_wave
-    @multiplier = multiplier
   end
 
   def sample index
@@ -101,43 +101,42 @@ class PicoTune::WaveSample
   end
 
   def sine index
-    Math.sin(index / (@samples_per_wave / (Math::PI * 2))) * (@multiplier || 0.5)
+    Math.sin(index / (@samples_per_wave / (Math::PI * 2)))
   end
 
   def saw index
     interval = @samples_per_wave / 2
     half_interval = interval / 2
     percent = ((index + half_interval) % interval) / interval.to_f
-    ((0.6 * percent) - 0.3) * (@multiplier || 0.5)
+    ((0.6 * percent) - 0.3)
   end
 
   def square index
-    (index <= @samples_per_wave / 2 ? 1.0 : -1.0) * (@multiplier || 0.25)
+    (index <= @samples_per_wave / 2 ? 1.0 : -1.0)
   end
 
   def noise index
     value = sine index
     rand = Random.rand - 0.5
-    value * rand * (@multiplier || 0.5)
+    value * rand
   end
 
   def triangle index
     half = @samples_per_wave / 2
     quarter = @samples_per_wave / 4
     ramp = 1.0 / quarter
-    m = @multiplier || 0.5
 
     if index <= half
       if index <= quarter
-        index * ramp * m
+        index * ramp
       else
-        (half - index) * ramp * m
+        (half - index) * ramp
       end
     else
       if index <= half + quarter
-        -((index - half) * ramp) * m
+        -((index - half) * ramp)
       else
-        -((@samples_per_wave - index) * ramp) * m
+        -((@samples_per_wave - index) * ramp)
       end
     end
   end
@@ -150,6 +149,22 @@ class PicoTune::Tune
     @name = name
     @sequence = sequence
     @phrases = phrases
+
+    @phrases.each do |p|
+      p.tune = self
+    end
+  end
+
+  def volume_factor_for_simultaneous_melodies
+    max_melodies_in_phrases = 0
+
+    @phrases.each do |phrase|
+      if phrase.simultaneous_melodies > max_melodies_in_phrases
+        max_melodies_in_phrases = phrase.simultaneous_melodies
+      end
+    end
+
+    1.0 / max_melodies_in_phrases if max_melodies_in_phrases > 0
   end
 
   def buffer
@@ -193,7 +208,8 @@ class PicoTune::Tune
 end
 
 class PicoTune::Phrase
-  attr_reader :name, :tempo, :beats, :subbeats, :melodies
+  attr_reader :name, :tempo, :beats, :subbeats, :melodies, :simultaneous_melodies
+  attr_accessor :tune
 
   def initialize name, tempo, beats, subbeats, melodies
     @name = name
@@ -201,6 +217,11 @@ class PicoTune::Phrase
     @beats = beats.to_i
     @subbeats = subbeats.to_i
     @melodies = melodies
+    @simultaneous_melodies = @melodies.count
+
+    @melodies.each do |m|
+      m.instrument.phrase = self
+    end
   end
 
   def seconds_per_beat
@@ -221,7 +242,7 @@ class PicoTune::Phrase
 
       @melodies.each do |melody|
         temp = Array.new(buffer_size) { PicoTune::Sample.new } if melody.instrument.reverb?
-        sub_buffer_size = (buffer_size.to_f / (@beats * @subbeats)).ceil
+        sub_buffer_size = buffer_size / (@beats * @subbeats)
         last_step_number = -1
         carry_over = 0
 
@@ -285,6 +306,7 @@ end
 
 class PicoTune::Instrument
   attr_reader :name, :tone, :length, :volume, :pan, :reverb
+  attr_accessor :phrase
 
   def initialize name, tone = 0, length = 'full', volume = 'full', pan = 'center', reverb = 'none'
     @name = name
@@ -369,16 +391,23 @@ class PicoTune::Instrument
 
   def wave wave_index, note 
     frequency = frequency_for_note note
-    samples_per_wave = (PicoTune::SAMPLE_RATE / frequency).ceil
+    samples_per_wave = (PicoTune::SAMPLE_RATE / frequency).to_i
     sample = PicoTune::WaveSample.new(@tone, samples_per_wave).sample wave_index
     sample.modify_left :*, volume_value * (1 - pan_value / 4.0)
     sample.modify_right :*, volume_value * (pan_value / 4.0)
+
+    if v = phrase&.tune&.volume_factor_for_simultaneous_melodies
+      sample.modify_left :*, v
+      sample.modify_right :*, v
+    end
+
     sample
   end
 
   def samples_per_wave note
     frequency = frequency_for_note note
-    (PicoTune::SAMPLE_RATE / frequency).ceil end
+    (PicoTune::SAMPLE_RATE / frequency).to_i
+  end
 
   def frequency_for_note note
     parts = note.split ''
