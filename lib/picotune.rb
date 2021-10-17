@@ -290,7 +290,7 @@ class PicoTune::Phrase
                   temp[i + melody.instrument.reverb_offset] = verb_sample
                 end
 
-                samples[i] = samples[i].add temp[i]
+                samples[i] = (samples[i] || PicoTune::Sample.new).add temp[i]
                 
                 i += 1
               end
@@ -308,7 +308,7 @@ class PicoTune::Instrument
   attr_reader :name, :tone, :length, :volume, :pan, :reverb
   attr_accessor :phrase
 
-  def initialize name, tone = 0, length = 'full', volume = 'full', pan = 'center', reverb = 'none'
+  def initialize name, tone, length, volume, pan, reverb
     @name = name
     @tone = tone
     @length = length
@@ -329,6 +329,8 @@ class PicoTune::Instrument
       0.75
     when 'full'
       1.0
+    else
+      1.0
     end
   end
 
@@ -343,6 +345,8 @@ class PicoTune::Instrument
     when 'threequarters'
       0.75
     when 'full'
+      1.0
+    else
       1.0
     end
   end
@@ -359,6 +363,8 @@ class PicoTune::Instrument
       3
     when 'right'
       4
+    else
+      2
     end
   end
 
@@ -463,11 +469,11 @@ class PicoTune::Assembler
     instruments = list.select { |item| item['type'] == 'instrument' }.map do |item|
       PicoTune::Instrument.new(
         item['name'],
-        item['tone'],
-        item['length'],
-        item['volume'],
-        item['pan'],
-        item['reverb']
+        item['tone'] || 'sine',
+        item['length'] || 'full',
+        item['volume'] || 'full',
+        item['pan'] || 'center',
+        item['reverb'] || 'none'
       )
     end
 
